@@ -26,7 +26,7 @@ setup(
         "moviepy==1.0.3",
         "Pillow>=10.1.0",
         "imageio>=2.33",
-        "imageio-ffmpeg>=0.4.9",
+        "imageio-ffmpeg>=0.5.1",
         "pygments>=2.17.0",
         "matplotlib>=3.8.0",
         "networkx>=3.2",
