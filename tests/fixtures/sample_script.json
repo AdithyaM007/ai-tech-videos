@@ -1,0 +1,53 @@
+{
+  "hook": "Have you ever wondered why Python is taking the world by storm?",
+  "intro": "Hello! Welcome to Python Basics. In this episode we will learn what Python is, how to install it, and write our very first program.",
+  "sections": [
+    {
+      "title": "Why Python?",
+      "duration_seconds": 120,
+      "script": "Python is one of the most popular programming languages in the world. It reads almost like English. It is used for websites, data science, and automation.",
+      "key_points": [
+        "Reads almost like English",
+        "Used for web, data science and automation",
+        "Huge, friendly community"
+      ],
+      "code_blocks": [
+        {
+          "code": "print('Hello, World!')",
+          "explanation": "Your first Python program",
+          "timing_seconds": 45
+        }
+      ],
+      "diagrams": [
+        {
+          "name": "python_vs_languages",
+          "type": "chart",
+          "description": "Comparison of Python vs other languages"
+        }
+      ]
+    },
+    {
+      "title": "Installing Python",
+      "duration_seconds": 90,
+      "script": "Let's install Python. Head to python dot org and download the installer. Remember to tick add Python to PATH.",
+      "code_blocks": [],
+      "diagrams": [
+        {
+          "name": "installation_flow",
+          "type": "flowchart",
+          "description": "Steps to install Python"
+        }
+      ]
+    }
+  ],
+  "outro": "Great job! Subscribe for Episode 2, where we learn about variables.",
+  "total_duration_seconds": 840,
+  "key_learnings": [
+    "What Python is used for",
+    "How to install Python",
+    "Your first program"
+  ],
+  "episode": 1,
+  "episode_title": "What is Python?",
+  "series": "python_basics"
+}
