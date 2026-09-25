@@ -74,6 +74,7 @@ def config_with_mocks(monkeypatch: pytest.MonkeyPatch, temp_output_dir: str) -> 
         ("IMAGES_DIR", "images"),
         ("VIDEOS_DIR", "videos"),
         ("LOGS_DIR", "logs"),
+        ("UPLOADS_DIR", "uploads"),
     ):
         monkeypatch.setattr(config, attr, os.path.join(temp_output_dir, sub))
     return temp_output_dir

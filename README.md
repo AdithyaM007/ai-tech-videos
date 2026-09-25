@@ -5,11 +5,12 @@
 
 Automated generation of the **Python Basics** YouTube series (10 episodes, 12–15
 minutes each, for complete beginners). One command turns an episode definition into
-a finished 1280×720, 30 FPS MP4 with a narrated voiceover, animated code and diagrams.
+a finished 1280×720, 30 FPS MP4 with a narrated voiceover, animated code and diagrams,
+and can upload it to YouTube.
 
 ```
-Episode spec ──► Claude (script JSON) ──► ElevenLabs (MP3) ──► MoviePy (MP4)
- config.py        script_generator.py      generate_episode.py   video_generator.py
+Episode spec ──► Claude (script JSON) ──► ElevenLabs (MP3) ──► MoviePy (MP4) ──► YouTube
+ config.py        script_generator.py      generate_episode.py   video_generator.py  youtube_uploader.py
 ```
 
 ## Quick start
@@ -28,7 +29,11 @@ The video is written to `output/videos/python_basics_ep01.mp4`.
 python src\generate_episode.py --list      # show all episodes
 python src\generate_episode.py --all       # generate all 10
 python src\generate_episode.py -e 3 -v     # episode 3 with debug logging
+python src\generate_episode.py -e 1 --upload         # generate + upload (private)
+python src\generate_episode.py -e 1 --upload-only    # upload an already generated video
 ```
+
+YouTube uploading needs a one-time Google Cloud setup: see [docs/YOUTUBE.md](docs/YOUTUBE.md).
 
 ## Project layout
 
@@ -38,6 +43,7 @@ src/
   script_generator.py   Stage 1 – Claude script generation and JSON parsing
   generate_episode.py   Orchestrator + Stage 2 – ElevenLabs voiceover, CLI entry point
   video_generator.py    Stage 3 – code animation, diagrams, slides, MoviePy assembly
+  youtube_uploader.py   Stage 4 – YouTube upload, thumbnail, playlist, chapters
   compat.py             Pillow 10 / MoviePy 1.0.3 compatibility shim
 tests/                  unit / integration / e2e pytest suites (+ fixtures)
 docs/                   Setup, architecture, API reference, troubleshooting

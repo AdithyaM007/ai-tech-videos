@@ -39,8 +39,9 @@ Module functions: `validate_script(script) -> list[str]`, `load_script(path) -> 
 
 | Method | Returns | Notes |
 |---|---|---|
-| `generate_episode(episode_number)` | `bool` | Full pipeline; never raises |
-| `generate_all(episodes=None)` | `dict[int, bool]` | |
+| `generate_episode(n, upload=False, privacy=None, publish_at=None, reupload=False)` | `bool` | Optional stage 4 |
+| `upload_existing(n, privacy=None, publish_at=None, reupload=False)` | `bool` | Upload the latest generated video |
+| `generate_all(episodes=None, **options)` | `dict[int, bool]` | `options` go to `generate_episode` |
 | `check_configuration()` | `None` | Raises `ConfigurationError` if keys are missing |
 | `_generate_script(episode_number)` | `str` path | Also sets `current_script` |
 | `_generate_voiceover(script_path, script_data=None)` | `str` path | Loads the script from disk if `script_data` is `None`; raises `VoiceoverError` |
@@ -49,7 +50,9 @@ Module functions: `validate_script(script) -> list[str]`, `load_script(path) -> 
 Module functions: `build_narration(script)`, `split_text(text, max_chars)`,
 `setup_logging(verbose=False)`, `main(argv=None) -> int`.
 
-CLI: `--episode/-e N`, `--all`, `--list`, `--series NAME`, `--verbose/-v`.
+CLI: `--episode/-e N`, `--all`, `--list`, `--series NAME`, `--verbose/-v`,
+`--upload`, `--upload-only`, `--privacy {private,unlisted,public}`,
+`--publish-at ISO_DATETIME`, `--reupload`.
 
 ## `video_generator`
 
@@ -77,6 +80,27 @@ CLI: `--episode/-e N`, `--all`, `--list`, `--series NAME`, `--verbose/-v`.
   `_create_closing_slide(script)`, `_assemble_video(segments, audio_path, output_path)`
 
 Module function: `frames_to_segments(frames, fps)`.
+
+## `youtube_uploader`
+
+### `YouTubeUploader(credentials_file=None, token_file=None, service=None)`
+
+| Method | Returns | Notes |
+|---|---|---|
+| `upload_episode(series_name, script, video_path, chapters=None, thumbnail_path=None, privacy=None, publish_at=None)` | `dict` record | Upload + thumbnail + playlist + record file |
+| `upload_video(video_path, metadata, privacy="private", publish_at=None)` | video ID | Resumable upload with retries; raises `UploadError` |
+| `set_thumbnail(video_id, image_path)` | `bool` | |
+| `get_or_create_playlist(title, description="")` | playlist ID | |
+| `add_to_playlist(playlist_id, video_id)` | `None` | |
+| `service` (property) | API client | Signs in on first use |
+
+Module functions: `build_metadata(script, series, chapters=None)`,
+`format_timestamp(seconds)`, `load_upload_record(series, episode)`,
+`record_path(series, episode)`, `find_latest_script(series, episode)`.
+
+`video_generator.compute_chapters(script, total_seconds)` returns
+`[(title, start_seconds)]`; `video_generator.part_weights(script)` returns the
+relative weights both the timeline and the chapters use.
 
 ## `compat`
 - `patch_pil_antialias()` – restores `PIL.Image.ANTIALIAS` for MoviePy 1.0.3 on Pillow ≥ 10.

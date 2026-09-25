@@ -26,8 +26,8 @@ voiceover at the brief's estimates; check current pricing on each provider.
 **Can I regenerate only the video?** Yes, see "Re-render a video" in
 [SETUP.md](SETUP.md).
 
-**Where is YouTube upload?** Not part of this repository yet; the existing
-upload tooling (`youtube_credentials.json`) is kept out of git via `.gitignore`.
+**How do I upload to YouTube?** See [YOUTUBE.md](YOUTUBE.md). It includes its own
+troubleshooting table.
 
 **Can I run the real end-to-end test?** `RUN_API_TESTS=1 pytest tests/e2e -m api`
 (uses real API credits).

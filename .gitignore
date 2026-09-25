@@ -9,6 +9,8 @@ ENV/
 .env.*.local
 youtube_credentials.json
 youtube_token.pickle
+youtube_token.json
+client_secret*.json
 
 # Output files
 output/

@@ -76,6 +76,23 @@ installation flowchart; `python_vs_languages` or type `chart` → bar chart;
 type `flowchart` with `steps` → generic flowchart; anything else → a concept card
 with the description. A failing diagram is logged and skipped, not fatal.
 
+## Stage 4 – upload (`youtube_uploader.py`, optional)
+
+With `--upload` / `--upload-only`, `EpisodeGenerator._upload_video()` works out
+chapter timestamps with `compute_chapters()`, which uses the same part weights as
+`build_timeline()`, so the chapters line up with the rendered video.
+`YouTubeUploader.upload_episode()` then:
+
+1. builds the title, description and tags (`build_metadata`)
+2. uploads with a resumable `videos.insert`, retrying 5xx and network errors
+   with exponential backoff
+3. sets the title slide as the thumbnail (not fatal if the channel can't use custom thumbnails)
+4. finds or creates the series playlist and appends the video (not fatal)
+5. writes `output/uploads/<series>_epNN.json`, which later runs use to skip uploaded episodes
+
+OAuth uses the installed-app flow. The token is stored as JSON in
+`YOUTUBE_TOKEN_FILE` and refreshed automatically.
+
 ## Error handling
 
 `EpisodeGenerator.generate_episode()` validates the episode number and API keys

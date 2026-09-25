@@ -18,6 +18,7 @@ setup(
         "script_generator",
         "video_generator",
         "generate_episode",
+        "youtube_uploader",
     ],
     python_requires=">=3.10",
     install_requires=[
@@ -32,6 +33,10 @@ setup(
         "networkx>=3.2",
         "python-dotenv>=1.0.0",
         "numpy>=1.26",
+        "google-api-python-client>=2.100",
+        "google-auth>=2.20",
+        "google-auth-oauthlib>=1.2.0",
+        "google-auth-httplib2>=0.2.0",
     ],
     extras_require={
         "dev": [

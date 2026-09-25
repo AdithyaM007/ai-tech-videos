@@ -10,3 +10,7 @@ matplotlib==3.8.2
 networkx==3.2.1
 python-dotenv==1.0.0
 numpy==1.26.3
+google-api-python-client==2.200.0
+google-auth==2.58.1
+google-auth-oauthlib==1.4.1
+google-auth-httplib2==0.4.2

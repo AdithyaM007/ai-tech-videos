@@ -37,6 +37,12 @@ copy .env.example .env
 | `CLAUDE_MAX_TOKENS` | no | `32000` | Output token limit per script |
 | `OUTPUT_DIR` | no | `./output` | Root for all generated files |
 | `CODE_ANIMATION_ENABLED` | no | `true` | `false` renders static code slides (faster) |
+| `YOUTUBE_CREDENTIALS_FILE` | for upload | `youtube_credentials.json` | OAuth client file ([YOUTUBE.md](YOUTUBE.md)) |
+| `YOUTUBE_TOKEN_FILE` | no | `youtube_token.json` | Saved YouTube login |
+| `YOUTUBE_PRIVACY` | no | `private` | Default privacy for uploads |
+| `YOUTUBE_PLAYLIST_PRIVACY` | no | `public` | Privacy of the series playlist when it is created |
+| `YOUTUBE_CHANNEL_HANDLE` | no | `@techbytesexplained` | Used in the description's subscribe link |
+| `YOUTUBE_CONTAINS_SYNTHETIC_MEDIA` | no | `true` | Declares the AI voice to YouTube |
 
 ## First run
 
@@ -52,7 +58,10 @@ voiceovers/ep01_<timestamp>.mp3
 images/ep01/*.png
 videos/python_basics_ep01.mp4
 logs/generate_<timestamp>.log
+uploads/python_basics_ep01.json      (only with --upload)
 ```
+
+To publish to YouTube, see [YOUTUBE.md](YOUTUBE.md).
 
 If you installed with `pip install -e .`, the `python-basics-videos` command is
 equivalent to `python src/generate_episode.py`.
