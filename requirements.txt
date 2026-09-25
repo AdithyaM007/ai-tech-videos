@@ -1,0 +1,12 @@
+# Runtime dependencies (see docs/SETUP.md for notes on version choices)
+anthropic==1.8.0
+requests==2.31.0
+moviepy==1.0.3
+Pillow==10.1.0
+imageio==2.33.1
+imageio-ffmpeg==0.5.1
+pygments==2.17.2
+matplotlib==3.8.2
+networkx==3.2.1
+python-dotenv==1.0.0
+numpy==1.26.3
