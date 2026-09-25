@@ -488,24 +488,13 @@ class AdvancedVideoGenerator:
         Durations are distributed proportionally to each part's scripted
         length and scaled so they sum to ``total_seconds``.
         """
-        parts: List[Tuple[List[Segment], float]] = []  # (segments, weight)
-
-        title_path = self._create_title_slide(script)
-        parts.append(
-            (
-                [(title_path, 1.0)],
-                _word_seconds(script.get("hook", "")) + _word_seconds(script.get("intro", "")),
-            )
-        )
-
+        weights = [weight for _, weight in part_weights(script)]
+        parts: List[Tuple[List[Segment], float]] = [
+            ([(self._create_title_slide(script), 1.0)], weights[0])
+        ]
         for index, section in enumerate(script.get("sections", [])):
-            weight = float(
-                section.get("duration_seconds") or _word_seconds(section.get("script", ""))
-            )
-            parts.append((self._create_section_slides(section, script, index), max(weight, 5.0)))
-
-        closing_path = self._create_closing_slide(script)
-        parts.append(([(closing_path, 1.0)], max(_word_seconds(script.get("outro", "")), 5.0)))
+            parts.append((self._create_section_slides(section, script, index), weights[index + 1]))
+        parts.append(([(self._create_closing_slide(script), 1.0)], weights[-1]))
 
         total_weight = sum(weight for _, weight in parts) or 1.0
         timeline: List[Segment] = []
@@ -670,6 +659,33 @@ class AdvancedVideoGenerator:
 # ----------------------------------------------------------------------
 # Timing helpers
 # ----------------------------------------------------------------------
+def part_weights(script: Dict[str, Any]) -> List[Tuple[str, float]]:
+    """``(chapter title, relative weight)`` for intro, each section and outro.
+
+    Shared by :meth:`AdvancedVideoGenerator.build_timeline` and
+    :func:`compute_chapters` so chapter timestamps match the rendered video.
+    """
+    intro = _word_seconds(script.get("hook", "")) + _word_seconds(script.get("intro", ""))
+    parts: List[Tuple[str, float]] = [("Introduction", max(intro, 5.0))]
+    for index, section in enumerate(script.get("sections", []) or []):
+        weight = float(section.get("duration_seconds") or _word_seconds(section.get("script", "")))
+        parts.append((str(section.get("title") or f"Part {index + 1}"), max(weight, 5.0)))
+    parts.append(("Recap", max(_word_seconds(script.get("outro", "")), 5.0)))
+    return parts
+
+
+def compute_chapters(script: Dict[str, Any], total_seconds: float) -> List[Tuple[str, float]]:
+    """Return ``(title, start_seconds)`` for each part of the video."""
+    parts = part_weights(script)
+    total_weight = sum(weight for _, weight in parts) or 1.0
+    chapters: List[Tuple[str, float]] = []
+    start = 0.0
+    for title, weight in parts:
+        chapters.append((title, start))
+        start += total_seconds * weight / total_weight
+    return chapters
+
+
 def _word_seconds(text: str, words_per_second: float = 2.5) -> float:
     return len(str(text).split()) / words_per_second
 

@@ -1,7 +1,8 @@
 """Integration tests for the EpisodeGenerator orchestrator."""
 
+import json
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -112,8 +113,118 @@ class TestCli:
     def test_single_episode(self, config_with_mocks):
         with patch.object(EpisodeGenerator, "generate_episode", return_value=True) as gen:
             assert main(["--episode", "3"]) == 0
-        gen.assert_called_once_with(3)
+        gen.assert_called_once_with(3, upload=False, privacy=None, publish_at=None, reupload=False)
 
     def test_all_with_failure(self, config_with_mocks):
         with patch.object(EpisodeGenerator, "generate_all", return_value={1: True, 2: False}):
             assert main(["--all"]) == 1
+
+
+@pytest.mark.integration
+class TestYouTubeUpload:
+    @pytest.fixture
+    def youtube_ready(self, config_with_mocks, monkeypatch):
+        secrets = os.path.join(config_with_mocks, "client.json")
+        open(secrets, "w").close()
+        monkeypatch.setattr(config, "YOUTUBE_CREDENTIALS_FILE", secrets)
+        monkeypatch.setattr(config, "YOUTUBE_TOKEN_FILE", os.path.join(config_with_mocks, "t"))
+        return config_with_mocks
+
+    def _write_generated_episode(self, sample_script_json):
+        os.makedirs(config.SCRIPTS_DIR, exist_ok=True)
+        os.makedirs(config.VIDEOS_DIR, exist_ok=True)
+        script_path = os.path.join(config.SCRIPTS_DIR, "python_basics_ep01_20260101_000000.json")
+        with open(script_path, "w", encoding="utf-8") as f:
+            json.dump(sample_script_json, f)
+        video_path = os.path.join(config.VIDEOS_DIR, "python_basics_ep01.mp4")
+        open(video_path, "wb").close()
+        return script_path, video_path
+
+    def test_generate_with_upload(self, mock_env, youtube_ready):
+        with patch.object(
+            EpisodeGenerator, "_generate_script", return_value="s.json"
+        ), patch.object(
+            EpisodeGenerator, "_generate_voiceover", return_value="a.mp3"
+        ), patch.object(
+            EpisodeGenerator, "_generate_video", return_value="v.mp4"
+        ), patch.object(
+            EpisodeGenerator, "_upload_video"
+        ) as upload:
+            assert EpisodeGenerator().generate_episode(1, upload=True, privacy="unlisted") is True
+        upload.assert_called_once_with("s.json", "v.mp4", 1, "unlisted", None)
+
+    def test_upload_requires_youtube_credentials(self, mock_env, config_with_mocks, monkeypatch):
+        monkeypatch.setattr(config, "YOUTUBE_CREDENTIALS_FILE", "/nope/client.json")
+        monkeypatch.setattr(config, "YOUTUBE_TOKEN_FILE", "/nope/token.json")
+        with patch.object(EpisodeGenerator, "_generate_script") as script:
+            assert EpisodeGenerator().generate_episode(1, upload=True) is False
+        script.assert_not_called()
+
+    def test_already_uploaded_is_skipped(self, mock_env, youtube_ready):
+        os.makedirs(config.UPLOADS_DIR)
+        with open(os.path.join(config.UPLOADS_DIR, "python_basics_ep01.json"), "w") as f:
+            json.dump({"url": "https://youtu.be/x"}, f)
+        with patch.object(EpisodeGenerator, "_generate_script") as script:
+            assert EpisodeGenerator().generate_episode(1, upload=True) is True
+            assert EpisodeGenerator().upload_existing(1) is True
+        script.assert_not_called()
+
+    def test_upload_video_stage(self, youtube_ready, sample_script_json):
+        script_path, video_path = self._write_generated_episode(sample_script_json)
+        gen = EpisodeGenerator()
+        gen._uploader = MagicMock()
+        gen._uploader.upload_episode.return_value = {"privacy": "private", "url": "u"}
+        with patch.object(gen.video_generator, "_get_audio_duration", return_value=600.0):
+            assert gen._upload_video(script_path, video_path, 1, "public", None) == "u"
+        kwargs = gen._uploader.upload_episode.call_args.kwargs
+        assert kwargs["privacy"] == "public"
+        assert kwargs["chapters"][0] == ("Introduction", 0.0)
+        assert kwargs["thumbnail_path"].endswith(os.path.join("ep01", "title_01.png"))
+
+    def test_upload_existing(self, youtube_ready, sample_script_json):
+        script_path, video_path = self._write_generated_episode(sample_script_json)
+        with patch.object(EpisodeGenerator, "_upload_video") as upload:
+            assert EpisodeGenerator().upload_existing(1, privacy="public") is True
+        upload.assert_called_once_with(script_path, video_path, 1, "public", None)
+
+    def test_upload_existing_not_generated(self, youtube_ready):
+        assert EpisodeGenerator().upload_existing(1) is False
+
+    def test_uploader_created_lazily(self):
+        gen = EpisodeGenerator()
+        assert gen.uploader is gen.uploader
+
+
+@pytest.mark.integration
+class TestUploadCli:
+    def test_upload_only_all(self, config_with_mocks):
+        with patch.object(EpisodeGenerator, "upload_existing", return_value=True) as up:
+            assert main(["--all", "--upload-only", "--privacy", "unlisted"]) == 0
+        assert up.call_count == len(config.SERIES["python_basics"]["episodes"])
+        assert up.call_args.kwargs["privacy"] == "unlisted"
+
+    def test_generate_all_with_upload(self, config_with_mocks):
+        with patch.object(EpisodeGenerator, "generate_all", return_value={1: True}) as gen:
+            assert main(["--all", "--upload"]) == 0
+        assert gen.call_args.kwargs["upload"] is True
+
+    def test_publish_at_converted_to_utc(self, config_with_mocks):
+        with patch.object(EpisodeGenerator, "generate_episode", return_value=True) as gen:
+            main(["-e", "1", "--upload", "--publish-at", "2099-01-01T05:30:00+05:30"])
+        assert gen.call_args.kwargs["publish_at"] == "2099-01-01T00:00:00Z"
+
+    @pytest.mark.parametrize("value", ["not-a-date", "2099-01-01T00:00:00", "2000-01-01T00:00:00Z"])
+    def test_publish_at_rejected(self, value):
+        with pytest.raises(SystemExit):
+            main(["--upload", "--publish-at", value])
+
+    def test_publish_at_with_all_rejected(self, config_with_mocks):
+        with pytest.raises(SystemExit):
+            main(["--all", "--upload", "--publish-at", "2099-01-01T00:00:00Z"])
+
+    def test_list_shows_uploaded(self, config_with_mocks, capsys):
+        os.makedirs(config.UPLOADS_DIR)
+        with open(os.path.join(config.UPLOADS_DIR, "python_basics_ep01.json"), "w") as f:
+            json.dump({"url": "https://youtu.be/x"}, f)
+        main(["--list"])
+        assert "[uploaded: https://youtu.be/x]" in capsys.readouterr().out

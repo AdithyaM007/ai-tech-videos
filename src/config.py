@@ -27,6 +27,7 @@ VOICEOVERS_DIR: str = os.path.join(OUTPUT_DIR, "voiceovers")
 IMAGES_DIR: str = os.path.join(OUTPUT_DIR, "images")
 VIDEOS_DIR: str = os.path.join(OUTPUT_DIR, "videos")
 LOGS_DIR: str = os.path.join(OUTPUT_DIR, "logs")
+UPLOADS_DIR: str = os.path.join(OUTPUT_DIR, "uploads")
 
 # ---------------------------------------------------------------------------
 # API configuration
@@ -34,6 +35,25 @@ LOGS_DIR: str = os.path.join(OUTPUT_DIR, "logs")
 ANTHROPIC_API_KEY: str | None = os.getenv("ANTHROPIC_API_KEY")
 ELEVENLABS_API_KEY: str | None = os.getenv("ELEVENLABS_API_KEY")
 YOUTUBE_CREDENTIALS_FILE: str = os.getenv("YOUTUBE_CREDENTIALS_FILE", "youtube_credentials.json")
+
+YOUTUBE_TOKEN_FILE: str = os.getenv("YOUTUBE_TOKEN_FILE", "youtube_token.json")
+# Uploads start private so each video can be reviewed before publishing.
+YOUTUBE_PRIVACY: str = os.getenv("YOUTUBE_PRIVACY", "private")
+YOUTUBE_PLAYLIST_PRIVACY: str = os.getenv("YOUTUBE_PLAYLIST_PRIVACY", "public")
+YOUTUBE_CATEGORY_ID: str = os.getenv("YOUTUBE_CATEGORY_ID", "27")  # Education
+YOUTUBE_CHANNEL_HANDLE: str = os.getenv("YOUTUBE_CHANNEL_HANDLE", "@techbytesexplained")
+# The narration is an AI voice, so the upload declares synthetic media.
+YOUTUBE_CONTAINS_SYNTHETIC_MEDIA: bool = os.getenv(
+    "YOUTUBE_CONTAINS_SYNTHETIC_MEDIA", "true"
+).lower() in ("1", "true", "yes")
+YOUTUBE_TAGS: List[str] = [
+    "python",
+    "python tutorial",
+    "python for beginners",
+    "learn python",
+    "programming",
+    "coding for beginners",
+]
 
 CLAUDE_MODEL: str = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
 CLAUDE_MAX_TOKENS: int = int(os.getenv("CLAUDE_MAX_TOKENS", "32000"))
@@ -299,5 +319,12 @@ def get_elevenlabs_api_key() -> str | None:
 
 def ensure_output_dirs() -> None:
     """Create every output directory if it does not already exist."""
-    for directory in (SCRIPTS_DIR, VOICEOVERS_DIR, IMAGES_DIR, VIDEOS_DIR, LOGS_DIR):
+    for directory in (
+        SCRIPTS_DIR,
+        VOICEOVERS_DIR,
+        IMAGES_DIR,
+        VIDEOS_DIR,
+        LOGS_DIR,
+        UPLOADS_DIR,
+    ):
         os.makedirs(directory, exist_ok=True)
